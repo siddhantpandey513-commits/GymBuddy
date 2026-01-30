@@ -13,9 +13,9 @@ export default function HomeScreen() {
 
       <View style={styles.grid}>
         <Card title="🏋️ Workout" onPress={() => router.push("/workout")} />
-        <Card title="🍎 Diet" />
-        <Card title="🧘 Yoga" />
-        <Card title="💧 Water" />
+        <Card title="🍎 Diet" onPress={() => router.push("/diet")} />
+        <Card title="🧘 Yoga" onPress={() => router.push("/ yoga")} />
+        <Card title="💧 Water" onPress={() => router.push("/water")} />
       </View>
     </View>
   );

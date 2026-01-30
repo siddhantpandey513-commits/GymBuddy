@@ -5,9 +5,7 @@ export default function WorkoutScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🏋️ Workout</Text>
-      <Text style={styles.text}>
-        Exercises, warmups, cardio & stretching will live here.
-      </Text>
+      <Text style={styles.text}>Exercises, warmups, cardio & stretches.</Text>
     </View>
   );
 }
