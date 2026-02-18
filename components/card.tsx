@@ -19,16 +19,8 @@ const styles = StyleSheet.create({
     height: 140,
     backgroundColor: "#1e293b",
     borderRadius: 20,
-    marginBottom: 20,
     justifyContent: "center",
     alignItems: "center",
-
-    // 3D illusion
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
   },
   text: {
     color: "#fff",

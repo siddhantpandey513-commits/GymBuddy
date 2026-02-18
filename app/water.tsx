@@ -11,14 +11,23 @@ const INTERVALS = [
 
 export default function WaterScreen() {
   const scheduleReminder = async (minutes: number) => {
-    // Cancel old reminders
+    // 1. Cancel old reminders
     await Notifications.cancelAllScheduledNotificationsAsync();
 
+    // 2. Ensure Android notification channel exists
+    await Notifications.setNotificationChannelAsync("water", {
+      name: "Water Reminders",
+      importance: Notifications.AndroidImportance.HIGH,
+    });
+
+    // 3. Create trigger (THIS was broken before)
     const trigger: Notifications.NotificationTriggerInput = {
       seconds: minutes * 60,
       repeats: true,
+      channelId: "water",
     };
 
+    // 4. Schedule notification
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "💧 Drink Water",
@@ -27,6 +36,7 @@ export default function WaterScreen() {
       trigger,
     });
 
+    // 5. Save user preference
     await AsyncStorage.setItem("water_interval", minutes.toString());
   };
 
