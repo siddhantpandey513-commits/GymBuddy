@@ -8,15 +8,18 @@ const EXERCISES = [
   { name: "Squats", duration: 10 },
 ];
 
+const REST_DURATION = 5;
+
 export default function WorkoutScreen() {
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [phase, setPhase] = useState<"exercise" | "rest">("exercise");
 
   const currentExercise = EXERCISES[currentIndex];
 
   useEffect(() => {
-    if (!started || timeLeft <= 0) return;
+    if (!started) return;
 
     const timer = setTimeout(() => {
       setTimeLeft((prev) => prev - 1);
@@ -26,22 +29,27 @@ export default function WorkoutScreen() {
   }, [timeLeft, started]);
 
   useEffect(() => {
-    if (!started) return;
+    if (!started || timeLeft > 0) return;
 
-    if (timeLeft === 0) {
+    if (phase === "exercise") {
       if (currentIndex < EXERCISES.length - 1) {
-        const nextIndex = currentIndex + 1;
-        setCurrentIndex(nextIndex);
-        setTimeLeft(EXERCISES[nextIndex].duration);
+        setPhase("rest");
+        setTimeLeft(REST_DURATION);
       } else {
         setStarted(false);
       }
+    } else if (phase === "rest") {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setPhase("exercise");
+      setTimeLeft(EXERCISES[nextIndex].duration);
     }
   }, [timeLeft]);
 
   const startWorkout = () => {
     setStarted(true);
     setCurrentIndex(0);
+    setPhase("exercise");
     setTimeLeft(EXERCISES[0].duration);
   };
 
@@ -53,6 +61,18 @@ export default function WorkoutScreen() {
         <Pressable style={styles.button} onPress={startWorkout}>
           <Text style={styles.buttonText}>Start Workout</Text>
         </Pressable>
+      </View>
+    );
+  }
+
+  if (phase === "rest") {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.getReady}>Get Ready</Text>
+        <Text style={styles.nextExercise}>
+          Next: {EXERCISES[currentIndex + 1]?.name}
+        </Text>
+        <Text style={styles.timer}>{timeLeft}s</Text>
       </View>
     );
   }
@@ -81,6 +101,17 @@ const styles = StyleSheet.create({
   exercise: {
     fontSize: 32,
     fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+  },
+  getReady: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#f59e0b",
+    marginBottom: 10,
+  },
+  nextExercise: {
+    fontSize: 20,
     color: "#fff",
     marginBottom: 10,
   },
