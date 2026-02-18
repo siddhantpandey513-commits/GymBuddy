@@ -1,48 +1,67 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Colors } from "../constants/colors";
 
-const WORKOUT_PLAN = [
-  {
-    section: "🔥 Warm Up",
-    exercises: [
-      { name: "Jumping Jacks", detail: "2 min" },
-      { name: "Arm Circles", detail: "1 min" },
-    ],
-  },
-  {
-    section: "🏋️ Main Workout",
-    exercises: [
-      { name: "Push Ups", detail: "15 reps" },
-      { name: "Squats", detail: "20 reps" },
-    ],
-  },
-  {
-    section: "🧘 Stretch",
-    exercises: [
-      { name: "Hamstring Stretch", detail: "30 sec" },
-      { name: "Shoulder Stretch", detail: "30 sec" },
-    ],
-  },
+const EXERCISES = [
+  { name: "Jumping Jacks", duration: 10 },
+  { name: "Push Ups", duration: 10 },
+  { name: "Squats", duration: 10 },
 ];
 
 export default function WorkoutScreen() {
+  const [started, setStarted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  const currentExercise = EXERCISES[currentIndex];
+
+  useEffect(() => {
+    if (!started || timeLeft <= 0) return;
+
+    const timer = setTimeout(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [timeLeft, started]);
+
+  useEffect(() => {
+    if (!started) return;
+
+    if (timeLeft === 0) {
+      if (currentIndex < EXERCISES.length - 1) {
+        const nextIndex = currentIndex + 1;
+        setCurrentIndex(nextIndex);
+        setTimeLeft(EXERCISES[nextIndex].duration);
+      } else {
+        setStarted(false);
+      }
+    }
+  }, [timeLeft]);
+
+  const startWorkout = () => {
+    setStarted(true);
+    setCurrentIndex(0);
+    setTimeLeft(EXERCISES[0].duration);
+  };
+
+  if (!started) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Workout Session</Text>
+
+        <Pressable style={styles.button} onPress={startWorkout}>
+          <Text style={styles.buttonText}>Start Workout</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Workout Plan</Text>
-
-      {WORKOUT_PLAN.map((group) => (
-        <View key={group.section} style={styles.section}>
-          <Text style={styles.sectionTitle}>{group.section}</Text>
-
-          {group.exercises.map((exercise) => (
-            <View key={exercise.name} style={styles.card}>
-              <Text style={styles.exercise}>{exercise.name}</Text>
-              <Text style={styles.detail}>{exercise.detail}</Text>
-            </View>
-          ))}
-        </View>
-      ))}
-    </ScrollView>
+    <View style={styles.container}>
+      <Text style={styles.exercise}>{currentExercise.name}</Text>
+      <Text style={styles.timer}>{timeLeft}s</Text>
+    </View>
   );
 }
 
@@ -50,7 +69,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 28,
@@ -58,29 +78,26 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: 20,
   },
-  section: {
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.textSecondary,
+  exercise: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 10,
   },
-  card: {
-    backgroundColor: "#1e293b",
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  timer: {
+    fontSize: 48,
+    fontWeight: "bold",
+    color: "#2563eb",
   },
-  exercise: {
+  button: {
+    backgroundColor: "#2563eb",
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 14,
+  },
+  buttonText: {
     color: "#fff",
-    fontSize: 16,
-  },
-  detail: {
-    color: "#94a3b8",
-    fontSize: 14,
+    fontSize: 18,
+    fontWeight: "600",
   },
 });

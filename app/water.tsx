@@ -1,5 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Notifications from "expo-notifications";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Colors } from "../constants/colors";
 
@@ -10,47 +8,15 @@ const INTERVALS = [
 ];
 
 export default function WaterScreen() {
-  const scheduleReminder = async (minutes: number) => {
-    // 1. Cancel old reminders
-    await Notifications.cancelAllScheduledNotificationsAsync();
-
-    // 2. Ensure Android notification channel exists
-    await Notifications.setNotificationChannelAsync("water", {
-      name: "Water Reminders",
-      importance: Notifications.AndroidImportance.HIGH,
-    });
-
-    // 3. Create trigger (THIS was broken before)
-    const trigger: Notifications.NotificationTriggerInput = {
-      seconds: minutes * 60,
-      repeats: true,
-      channelId: "water",
-    };
-
-    // 4. Schedule notification
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "💧 Drink Water",
-        body: "Hydration check! Take a sip now.",
-      },
-      trigger,
-    });
-
-    // 5. Save user preference
-    await AsyncStorage.setItem("water_interval", minutes.toString());
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>💧 Water Reminder</Text>
-      <Text style={styles.subtitle}>Choose reminder interval</Text>
+      <Text style={styles.subtitle}>
+        Notifications require Dev Build (SDK 53+)
+      </Text>
 
       {INTERVALS.map((item) => (
-        <Pressable
-          key={item.minutes}
-          style={styles.button}
-          onPress={() => scheduleReminder(item.minutes)}
-        >
+        <Pressable key={item.minutes} style={styles.button}>
           <Text style={styles.buttonText}>{item.label}</Text>
         </Pressable>
       ))}
