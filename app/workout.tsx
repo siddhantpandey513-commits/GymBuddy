@@ -1,3 +1,4 @@
+import { Audio } from "expo-av";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Colors } from "../constants/colors";
@@ -12,42 +13,78 @@ const REST_DURATION = 5;
 
 export default function WorkoutScreen() {
   const [started, setStarted] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [phase, setPhase] = useState<"exercise" | "rest">("exercise");
+  const [whistle, setWhistle] = useState<Audio.Sound | null>(null);
 
   const currentExercise = EXERCISES[currentIndex];
 
+  const totalSteps = EXERCISES.length * 2 - 1;
+  const currentStep = currentIndex * 2 + (phase === "exercise" ? 1 : 2);
+  const progress = currentStep / totalSteps;
+
+  // 🎺 Load whistle sound once
   useEffect(() => {
-    if (!started) return;
+    const loadSound = async () => {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/sounds/whistle.mp3"),
+      );
+      setWhistle(sound);
+    };
+
+    loadSound();
+
+    return () => {
+      whistle?.unloadAsync();
+    };
+  }, []);
+
+  const playWhistle = async () => {
+    try {
+      await whistle?.replayAsync();
+    } catch (error) {
+      console.log("Whistle error:", error);
+    }
+  };
+
+  // ⏱ Countdown timer
+  useEffect(() => {
+    if (!started || paused) return;
 
     const timer = setTimeout(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [timeLeft, started]);
+  }, [timeLeft, started, paused]);
 
+  // 🔁 Phase switching logic
   useEffect(() => {
-    if (!started || timeLeft > 0) return;
+    if (!started || paused || timeLeft > 0) return;
 
     if (phase === "exercise") {
       if (currentIndex < EXERCISES.length - 1) {
+        playWhistle();
         setPhase("rest");
         setTimeLeft(REST_DURATION);
       } else {
+        playWhistle();
         setStarted(false);
       }
-    } else if (phase === "rest") {
+    } else {
       const nextIndex = currentIndex + 1;
+      playWhistle();
       setCurrentIndex(nextIndex);
       setPhase("exercise");
       setTimeLeft(EXERCISES[nextIndex].duration);
     }
-  }, [timeLeft]);
+  }, [timeLeft, paused]);
 
   const startWorkout = () => {
     setStarted(true);
+    setPaused(false);
     setCurrentIndex(0);
     setPhase("exercise");
     setTimeLeft(EXERCISES[0].duration);
@@ -65,22 +102,33 @@ export default function WorkoutScreen() {
     );
   }
 
-  if (phase === "rest") {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.getReady}>Get Ready</Text>
-        <Text style={styles.nextExercise}>
-          Next: {EXERCISES[currentIndex + 1]?.name}
-        </Text>
-        <Text style={styles.timer}>{timeLeft}s</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <Text style={styles.exercise}>{currentExercise.name}</Text>
+      {/* 📊 Progress Bar */}
+      <View style={styles.progressBackground}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
+
+      {phase === "rest" ? (
+        <>
+          <Text style={styles.getReady}>Get Ready</Text>
+          <Text style={styles.nextExercise}>
+            Next: {EXERCISES[currentIndex + 1]?.name}
+          </Text>
+        </>
+      ) : (
+        <Text style={styles.exercise}>{currentExercise.name}</Text>
+      )}
+
       <Text style={styles.timer}>{timeLeft}s</Text>
+
+      {/* ⏸ Pause / Resume */}
+      <Pressable
+        style={[styles.button, { marginTop: 20 }]}
+        onPress={() => setPaused(!paused)}
+      >
+        <Text style={styles.buttonText}>{paused ? "Resume" : "Pause"}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -91,6 +139,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
+  },
+  progressBackground: {
+    height: 8,
+    width: "100%",
+    backgroundColor: "#334155",
+    borderRadius: 10,
+    marginBottom: 30,
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#2563eb",
+    borderRadius: 10,
   },
   title: {
     fontSize: 28,
